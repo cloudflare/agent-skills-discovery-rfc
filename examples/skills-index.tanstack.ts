@@ -1,16 +1,16 @@
 /**
- * TanStack Start API route that generates /.well-known/skills/index.json.
+ * TanStack Start API route that generates /.well-known/agent-skills/index.json.
  * Runs at request time.
  *
- * Scans public/.well-known/skills/ for skill directories, parses YAML frontmatter
+ * Scans public/.well-known/agent-skills/ for skill directories, parses YAML frontmatter
  * from each SKILL.md, computes SHA-256 digests, and outputs a JSON index per the
  * Agent Skills Discovery spec (v0.2.0).
  *
  * This implementation generates `type: "skill-md"` entries only. Archive-based
  * skills (`type: "archive"`) require separate tooling to create and register.
  *
- * Usage: Place this file at app/routes/.well-known/skills/index.json.ts
- * Skills: Place skill directories at public/.well-known/skills/{name}/SKILL.md
+ * Usage: Place this file at app/routes/.well-known/agent-skills/index.json.ts
+ * Skills: Place skill directories at public/.well-known/agent-skills/{name}/SKILL.md
  *
  * Requires: gray-matter (npm install gray-matter)
  */
@@ -33,9 +33,9 @@ function sha256(data: Buffer): string {
 	return `sha256:${createHash("sha256").update(data).digest("hex")}`;
 }
 
-export const APIRoute = createAPIFileRoute("/.well-known/skills/index.json")({
+export const APIRoute = createAPIFileRoute("/.well-known/agent-skills/index.json")({
 	GET: async () => {
-		const skillsDir = join(process.cwd(), "public/.well-known/skills");
+		const skillsDir = join(process.cwd(), "public/.well-known/agent-skills");
 
 		let entries;
 		try {
@@ -62,7 +62,7 @@ export const APIRoute = createAPIFileRoute("/.well-known/skills/index.json")({
 						name: data.name,
 						type: "skill-md",
 						description: data.description,
-						url: `/.well-known/skills/${dir.name}/SKILL.md`,
+						url: `/.well-known/agent-skills/${dir.name}/SKILL.md`,
 						digest: sha256(content),
 					});
 				} else {

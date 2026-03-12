@@ -65,10 +65,10 @@ There is no standard way to answer: "What skills does example.com publish?"
 
 ## Solution
 
-Register `skills` as a well-known URI suffix. Organizations can publish skills at:
+Register `agent-skills` as a well-known URI suffix. Organizations can publish skills at:
 
 ```
-https://example.com/.well-known/skills/
+https://example.com/.well-known/agent-skills/
 ```
 
 This provides a **single, predictable location** where agents and tooling can discover and fetch skills without prior configuration.
@@ -78,10 +78,10 @@ This provides a **single, predictable location** where agents and tooling can di
 Publishers MUST provide an index at:
 
 ```
-/.well-known/skills/index.json
+/.well-known/agent-skills/index.json
 ```
 
-Each skill in the index includes a `url` field pointing to its artifact. While publishers conventionally host skill files under `/.well-known/skills/`, the `url` field allows skills to be hosted at any location (e.g., on a CDN or at a versioned path).
+Each skill in the index includes a `url` field pointing to its artifact. While publishers conventionally host skill files under `/.well-known/agent-skills/`, the `url` field allows skills to be hosted at any location (e.g., on a CDN or at a versioned path).
 
 Skill names MUST conform to the [Agent Skills specification](https://agentskills.io/specification):
 
@@ -161,7 +161,7 @@ An agent handling "extract text from this PDF" loads `SKILL.md` and stops there.
 
 ## Discovery Index
 
-Publishers MUST provide an index at `/.well-known/skills/index.json`. The index enumerates all available skills, enabling clients to discover skills in a single request.
+Publishers MUST provide an index at `/.well-known/agent-skills/index.json`. The index enumerates all available skills, enabling clients to discover skills in a single request.
 
 ### Versioning
 
@@ -184,14 +184,14 @@ Clients MUST parse the `version` field before processing the index. If `version`
       "name": "code-review",
       "type": "skill-md",
       "description": "Review code for bugs, security issues, and best practices.",
-      "url": "/.well-known/skills/code-review/SKILL.md",
+      "url": "/.well-known/agent-skills/code-review/SKILL.md",
       "digest": "sha256:c4d5e6f7..."
     },
     {
       "name": "wrangler",
       "type": "archive",
       "description": "Deploy and manage Cloudflare Workers projects.",
-      "url": "/.well-known/skills/wrangler.tar.gz",
+      "url": "/.well-known/agent-skills/wrangler.tar.gz",
       "digest": "sha256:a1b2c3d4..."
     }
   ]
@@ -218,17 +218,17 @@ The index contains a top-level `version` field and a `skills` array.
 | `digest` | Yes | SHA-256 content digest of the artifact at `url`, formatted as `sha256:{hex}` where `{hex}` is 64 lowercase hexadecimal characters. See [Integrity and Verification](#integrity-and-verification). |
 
 > [!NOTE]
-> In a future version, `url` may become optional for `type: "skill-md"` entries, defaulting to `/.well-known/skills/{name}/SKILL.md`.
+> In a future version, `url` may become optional for `type: "skill-md"` entries, defaulting to `/.well-known/agent-skills/{name}/SKILL.md`.
 
 ### URL Resolution
 
 The `url` field specifies where to fetch the skill artifact. URLs are resolved per [RFC 3986 Section 5](https://datatracker.ietf.org/doc/html/rfc3986#section-5) using the index URL as the base URI. URLs may be:
 
-- **Path-absolute** (resolved against the index origin): `/.well-known/skills/code-review/SKILL.md`
+- **Path-absolute** (resolved against the index origin): `/.well-known/agent-skills/code-review/SKILL.md`
 - **Absolute** (fully qualified): `https://cdn.example.com/v2/skills/code-review/SKILL.md`
 - **Relative** (resolved against the index URL directory): `code-review/SKILL.md`
 
-For `type: "skill-md"`, `url` conventionally follows the pattern `/.well-known/skills/{name}/SKILL.md`, though publishers MAY use any URL.
+For `type: "skill-md"`, `url` conventionally follows the pattern `/.well-known/agent-skills/{name}/SKILL.md`, though publishers MAY use any URL.
 
 For `type: "archive"`, `url` points to the archive file. Clients SHOULD determine the archive format from the server's `Content-Type` header, falling back to the URL file extension if the header is absent or generic (e.g., `application/octet-stream`). See [Archive Distribution](#archive-distribution).
 
@@ -299,7 +299,7 @@ Simple skills — those with only `SKILL.md` — SHOULD use `type: "skill-md"`. 
 A minimal skill contains just the required `SKILL.md`:
 
 ````
-GET /.well-known/skills/git-workflow/SKILL.md
+GET /.well-known/agent-skills/git-workflow/SKILL.md
 
 ---
 name: git-workflow
@@ -368,21 +368,21 @@ For configuration options, see [references/CONFIGURATION.md](references/CONFIGUR
       "name": "code-review",
       "type": "skill-md",
       "description": "Review code for bugs, security issues, and best practices.",
-      "url": "/.well-known/skills/code-review/SKILL.md",
+      "url": "/.well-known/agent-skills/code-review/SKILL.md",
       "digest": "sha256:c4d5e6f7..."
     },
     {
       "name": "git-workflow",
       "type": "skill-md",
       "description": "Follow team Git conventions for branching and commits.",
-      "url": "/.well-known/skills/git-workflow/SKILL.md",
+      "url": "/.well-known/agent-skills/git-workflow/SKILL.md",
       "digest": "sha256:a7b8c9d0..."
     },
     {
       "name": "wrangler",
       "type": "archive",
       "description": "Deploy and manage Cloudflare Workers projects.",
-      "url": "/.well-known/skills/wrangler.tar.gz",
+      "url": "/.well-known/agent-skills/wrangler.tar.gz",
       "digest": "sha256:f1e2d3c4..."
     }
   ]
@@ -393,7 +393,7 @@ For configuration options, see [references/CONFIGURATION.md](references/CONFIGUR
 
 Servers MUST:
 
-- Serve `/.well-known/skills/index.json` with `application/json` content type
+- Serve `/.well-known/agent-skills/index.json` with `application/json` content type
 - Serve `SKILL.md` files with `text/markdown` or `text/plain` content type
 - Serve `.tar.gz` archives with `application/gzip` content type and `.zip` archives with `application/zip` content type
 - Support `GET` and `HEAD` methods
@@ -413,7 +413,7 @@ Clients MUST:
 
 Clients discovering skills from a well-known endpoint MUST:
 
-1. **Fetch `index.json`.** Retrieve `/.well-known/skills/index.json` to enumerate available skills.
+1. **Fetch `index.json`.** Retrieve `/.well-known/agent-skills/index.json` to enumerate available skills.
 
 2. **Check version.** Parse the `version` field. If absent, treat the index as v0.1.0. If the major version is unrecognized, warn the user and abort. Clients MUST ignore unrecognized fields.
 
@@ -434,7 +434,7 @@ Clients discovering skills from a well-known endpoint MUST:
 The security considerations from [RFC 8615 Section 4](https://datatracker.ietf.org/doc/html/rfc8615#section-4) apply. Additional considerations for skills:
 
 - **Trust**: Skills contain instructions and executable code. Agents should only use skills from trusted origins. See the [Agent Skills security guidance](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview#security-considerations).
-- **Access control**: Servers should control write access to `/.well-known/skills/` carefully, especially in shared hosting environments.
+- **Access control**: Servers should control write access to `/.well-known/agent-skills/` carefully, especially in shared hosting environments.
 - **Script execution**: Clients SHALL NOT execute files under `scripts/` by default. Clients SHALL consider implementing a permissions model that only executes scripts bundled with a skill when explicitly allowed by the user or client configuration. Refer to the [Agent Skills specification](https://agentskills.io/specification) guidance on script execution.
 - **Digest verification**: Clients MUST verify artifact digests after download. A digest mismatch indicates the content has been tampered with or is stale; clients MUST NOT use unverified content.
 - **Archive safety**: Clients MUST validate archive digests before unpacking. Clients MUST reject archives containing path traversal sequences (`..`, absolute paths) or symlinks and hard links that resolve outside the skill directory. Clients SHOULD verify total unpacked size against reasonable limits to prevent denial-of-service via decompression bombs.

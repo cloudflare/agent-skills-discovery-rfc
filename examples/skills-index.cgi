@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# CGI script that generates /.well-known/skills/index.json
+# CGI script that generates /.well-known/agent-skills/index.json
 # A throwback to simpler times. Works with Apache, Nginx (via fcgiwrap), or any CGI-capable server.
 #
 # Scans the skills directory for subdirectories, parses YAML frontmatter
@@ -10,8 +10,8 @@
 # This implementation generates `type: "skill-md"` entries only. Archive-based
 # skills (`type: "archive"`) require separate tooling to create and register.
 #
-# Usage: Place in cgi-bin/ and configure your server to serve it at /.well-known/skills/index.json
-# Skills: Place skill directories at /var/www/html/.well-known/skills/{name}/SKILL.md
+# Usage: Place in cgi-bin/ and configure your server to serve it at /.well-known/agent-skills/index.json
+# Skills: Place skill directories at /var/www/html/.well-known/agent-skills/{name}/SKILL.md
 #
 # Note: Only single-line name/description values are supported (no YAML multi-line syntax)
 #
@@ -23,7 +23,7 @@ use Digest::SHA qw(sha256_hex);
 use JSON::PP;
 
 # Configure this path to match your setup
-my $skills_dir = $ENV{SKILLS_DIR} || '/var/www/html/.well-known/skills';
+my $skills_dir = $ENV{SKILLS_DIR} || '/var/www/html/.well-known/agent-skills';
 
 print "Content-Type: application/json\r\n";
 print "Cache-Control: public, max-age=300\r\n\r\n";
@@ -86,7 +86,7 @@ if (opendir(my $dh, $skills_dir)) {
             name        => $name,
             type        => 'skill-md',
             description => $description,
-            url         => "/.well-known/skills/$entry/SKILL.md",
+            url         => "/.well-known/agent-skills/$entry/SKILL.md",
             digest      => $digest,
         };
     }

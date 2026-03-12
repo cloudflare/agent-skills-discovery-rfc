@@ -1,16 +1,16 @@
 /**
- * Next.js Route Handler that generates /.well-known/skills/index.json.
+ * Next.js Route Handler that generates /.well-known/agent-skills/index.json.
  * Runs at build time when using static export, or at request time (cached via route config).
  *
- * Scans public/.well-known/skills/ for skill directories, parses YAML frontmatter
+ * Scans public/.well-known/agent-skills/ for skill directories, parses YAML frontmatter
  * from each SKILL.md, computes SHA-256 digests, and outputs a JSON index per the
  * Agent Skills Discovery spec (v0.2.0).
  *
  * This implementation generates `type: "skill-md"` entries only. Archive-based
  * skills (`type: "archive"`) require separate tooling to create and register.
  *
- * Usage: Place this file at app/.well-known/skills/index.json/route.ts
- * Skills: Place skill directories at public/.well-known/skills/{name}/SKILL.md
+ * Usage: Place this file at app/.well-known/agent-skills/index.json/route.ts
+ * Skills: Place skill directories at public/.well-known/agent-skills/{name}/SKILL.md
  *
  * Requires: gray-matter (npm install gray-matter)
  */
@@ -36,7 +36,7 @@ function sha256(data: Buffer): string {
 export const dynamic = "force-static";
 
 export async function GET() {
-	const skillsDir = join(process.cwd(), "public/.well-known/skills");
+	const skillsDir = join(process.cwd(), "public/.well-known/agent-skills");
 
 	let entries;
 	try {
@@ -63,7 +63,7 @@ export async function GET() {
 					name: data.name,
 					type: "skill-md",
 					description: data.description,
-					url: `/.well-known/skills/${dir.name}/SKILL.md`,
+					url: `/.well-known/agent-skills/${dir.name}/SKILL.md`,
 					digest: sha256(content),
 				});
 			} else {
