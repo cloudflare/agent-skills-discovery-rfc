@@ -1,12 +1,12 @@
 /**
- * Astro API route that generates /.well-known/skills/index.json.
+ * Astro API route that generates /.well-known/agent-skills/index.json.
  * Runs at build time (static) or request time (SSR) depending on your Astro config.
  *
- * Scans public/.well-known/skills/ for skill directories, parses YAML frontmatter
+ * Scans public/.well-known/agent-skills/ for skill directories, parses YAML frontmatter
  * from each SKILL.md, collects all files, and outputs a JSON index per the Agent Skills Discovery spec.
  *
- * Usage: Place this file at src/pages/.well-known/skills/index.json.ts
- * Skills: Place skill directories at public/.well-known/skills/{name}/SKILL.md
+ * Usage: Place this file at src/pages/.well-known/agent-skills/index.json.ts
+ * Skills: Place skill directories at public/.well-known/agent-skills/{name}/SKILL.md
  *
  * Requires: gray-matter (npm install gray-matter)
  */
@@ -38,7 +38,7 @@ async function collectFiles(dir: string, baseDir: string): Promise<string[]> {
 }
 
 export async function GET() {
-	const skillsDir = join(process.cwd(), "public/.well-known/skills");
+	const skillsDir = join(process.cwd(), "public/.well-known/agent-skills");
 
 	let entries;
 	try {

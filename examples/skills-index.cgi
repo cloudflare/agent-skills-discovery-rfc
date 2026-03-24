@@ -1,13 +1,13 @@
 #!/usr/bin/perl
 #
-# CGI script that generates /.well-known/skills/index.json
+# CGI script that generates /.well-known/agent-skills/index.json
 # A throwback to simpler times. Works with Apache, Nginx (via fcgiwrap), or any CGI-capable server.
 #
 # Scans the skills directory for subdirectories, parses YAML frontmatter
 # from each SKILL.md, and outputs a JSON index per the Agent Skills Discovery spec.
 #
-# Usage: Place in cgi-bin/ and configure your server to serve it at /.well-known/skills/index.json
-# Skills: Place skill directories at /var/www/html/.well-known/skills/{name}/SKILL.md
+# Usage: Place in cgi-bin/ and configure your server to serve it at /.well-known/agent-skills/index.json
+# Skills: Place skill directories at /var/www/html/.well-known/agent-skills/{name}/SKILL.md
 #
 # Note: Only single-line name/description values are supported (no YAML multi-line syntax)
 #
@@ -18,7 +18,7 @@ use warnings;
 use JSON::PP;
 
 # Configure this path to match your setup
-my $skills_dir = $ENV{SKILLS_DIR} || '/var/www/html/.well-known/skills';
+my $skills_dir = $ENV{SKILLS_DIR} || '/var/www/html/.well-known/agent-skills';
 
 print "Content-Type: application/json\r\n";
 print "Cache-Control: public, max-age=300\r\n\r\n";
