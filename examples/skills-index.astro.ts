@@ -3,8 +3,11 @@
  * Runs at build time (static) or request time (SSR) depending on your Astro config.
  *
  * Scans public/.well-known/agent-skills/ for skill directories, parses YAML frontmatter
- * from each SKILL.md, collects all files with SHA-256 digests, and outputs a JSON
- * index per the Agent Skills Discovery spec (v0.2.0).
+ * from each SKILL.md, computes SHA-256 digests, and outputs a JSON index per the
+ * Agent Skills Discovery spec (v0.2.0).
+ *
+ * This implementation generates `type: "skill-md"` entries only. Archive-based
+ * skills (`type: "archive"`) require separate tooling to create and register.
  *
  * Usage: Place this file at src/pages/.well-known/agent-skills/index.json.ts
  * Skills: Place skill directories at public/.well-known/agent-skills/{name}/SKILL.md
@@ -13,57 +16,22 @@
  */
 import { createHash } from "crypto";
 import { readdir, readFile } from "fs/promises";
-import { join, relative } from "path";
+import { join } from "path";
 import matter from "gray-matter";
-
-interface FileEntry {
-	path: string;
-	digest: string;
-}
 
 interface Skill {
 	name: string;
+	type: "skill-md";
 	description: string;
+	url: string;
 	digest: string;
-	files: FileEntry[];
 }
+
+const SCHEMA_URI = "https://schemas.agentskills.io/discovery/0.2.0/schema.json";
 
 /** SHA-256 digest of a buffer, formatted as sha256:{hex} */
 function sha256(data: Buffer): string {
 	return `sha256:${createHash("sha256").update(data).digest("hex")}`;
-}
-
-/** Compute the skill-level digest from sorted file entries */
-function computeSkillDigest(files: FileEntry[]): string {
-	const sorted = [...files].sort((a, b) => a.path.localeCompare(b.path));
-	const manifest = sorted
-		.map((f) => `${f.path}\0${f.digest.slice("sha256:".length)}\n`)
-		.join("");
-	return sha256(Buffer.from(manifest, "utf-8"));
-}
-
-/** Recursively collect all files with digests, returning paths relative to baseDir */
-async function collectFiles(
-	dir: string,
-	baseDir: string,
-): Promise<FileEntry[]> {
-	const entries = await readdir(dir, { withFileTypes: true });
-	const files: FileEntry[] = [];
-
-	for (const entry of entries) {
-		const fullPath = join(dir, entry.name);
-		if (entry.isDirectory()) {
-			files.push(...(await collectFiles(fullPath, baseDir)));
-		} else if (entry.isFile()) {
-			const content = await readFile(fullPath);
-			files.push({
-				path: relative(baseDir, fullPath),
-				digest: sha256(content),
-			});
-		}
-	}
-
-	return files;
 }
 
 export async function GET() {
@@ -74,7 +42,7 @@ export async function GET() {
 		entries = await readdir(skillsDir, { withFileTypes: true });
 	} catch (error) {
 		if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-			return Response.json({ version: "0.2.0", skills: [] });
+			return Response.json({ $schema: SCHEMA_URI, skills: [] });
 		}
 		throw error;
 	}
@@ -83,26 +51,19 @@ export async function GET() {
 	const skills: Skill[] = [];
 
 	for (const dir of skillDirs) {
-		const skillDirPath = join(skillsDir, dir.name);
-		const skillPath = join(skillDirPath, "SKILL.md");
+		const skillPath = join(skillsDir, dir.name, "SKILL.md");
 
 		try {
-			const content = await readFile(skillPath, "utf-8");
-			const { data } = matter(content);
+			const content = await readFile(skillPath);
+			const { data } = matter(content.toString("utf-8"));
 
 			if (data.name && data.description) {
-				const allFiles = await collectFiles(skillDirPath, skillDirPath);
-				const skillMd = allFiles.find((f) => f.path === "SKILL.md");
-				const rest = allFiles
-					.filter((f) => f.path !== "SKILL.md")
-					.sort((a, b) => a.path.localeCompare(b.path));
-				const files = skillMd ? [skillMd, ...rest] : rest;
-
 				skills.push({
 					name: data.name,
+					type: "skill-md",
 					description: data.description,
-					digest: computeSkillDigest(files),
-					files,
+					url: `/.well-known/agent-skills/${dir.name}/SKILL.md`,
+					digest: sha256(content),
 				});
 			} else {
 				console.warn(
@@ -118,5 +79,5 @@ export async function GET() {
 
 	skills.sort((a, b) => a.name.localeCompare(b.name));
 
-	return Response.json({ version: "0.2.0", skills });
+	return Response.json({ $schema: SCHEMA_URI, skills });
 }
