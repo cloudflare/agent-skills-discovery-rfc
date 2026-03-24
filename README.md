@@ -67,7 +67,7 @@ There is no standard way to answer: "What skills does example.com publish?"
 Register `skills` as a well-known URI suffix. Organizations can publish skills at:
 
 ```
-https://example.com/.well-known/skills/
+https://example.com/.well-known/agent-skills/
 ```
 
 This provides a **single, predictable location** where agents and tooling can discover and fetch skills without prior configuration.
@@ -77,9 +77,9 @@ This provides a **single, predictable location** where agents and tooling can di
 The well-known skills path uses this hierarchy:
 
 ```
-/.well-known/skills/index.json          # Required: skills index
-/.well-known/skills/{skill-name}/       # Skill directory
-/.well-known/skills/{skill-name}/SKILL.md
+/.well-known/agent-skills/index.json          # Required: skills index
+/.well-known/agent-skills/{skill-name}/       # Skill directory
+/.well-known/agent-skills/{skill-name}/SKILL.md
 ```
 
 The `{skill-name}` segment must conform to the [Agent Skills specification](https://agentskills.io/specification):
@@ -94,7 +94,7 @@ The `{skill-name}` segment must conform to the [Agent Skills specification](http
 Each skill directory must contain a `SKILL.md` file and may include supporting resources:
 
 ```
-/.well-known/skills/pdf-processing/
+/.well-known/agent-skills/pdf-processing/
 ├── SKILL.md           # Required: instructions + metadata
 ├── scripts/           # Optional: executable code
 │   └── extract.py
@@ -158,7 +158,7 @@ An agent handling "extract text from this PDF" loads `SKILL.md` and stops there.
 
 ## Discovery Index
 
-Publishers MUST provide an index at `/.well-known/skills/index.json`. The index enumerates all available skills and their files, enabling clients to discover and prefetch skill resources in a single request.
+Publishers MUST provide an index at `/.well-known/agent-skills/index.json`. The index enumerates all available skills and their files, enabling clients to discover and prefetch skill resources in a single request.
 
 ### Versioning
 
@@ -187,7 +187,7 @@ Clients MUST parse the `version` field before processing the index. If `version`
         { "path": "references/configuration.md", "digest": "sha256:0d1e2f3a..." }
       ],
       "package": {
-        "url": "https://example.com/.well-known/skills/wrangler.tar.gz",
+        "url": "https://example.com/.well-known/agent-skills/wrangler.tar.gz",
         "digest": "sha256:f1e2d3c4..."
       }
     },
@@ -216,7 +216,7 @@ The index contains a top-level `version` field and a `skills` array.
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `name` | Yes | Skill identifier. MUST match the directory name under `/.well-known/skills/` and conform to the [Agent Skills naming specification](https://agentskills.io/specification#name-field): 1-64 characters, lowercase alphanumeric and hyphens only, no leading/trailing/consecutive hyphens. |
+| `name` | Yes | Skill identifier. MUST match the directory name under `/.well-known/agent-skills/` and conform to the [Agent Skills naming specification](https://agentskills.io/specification#name-field): 1-64 characters, lowercase alphanumeric and hyphens only, no leading/trailing/consecutive hyphens. |
 | `description` | Yes | Brief description of what the skill does and when to use it. Max 1024 characters per the Agent Skills spec. |
 | `digest` | Yes | SHA-256 content digest of the skill. Used for change detection and validation. See [Integrity and Verification](#integrity-and-verification). |
 | `files` | Yes | Array of file objects in the skill directory. See [Files Array](#files-array). |
@@ -225,10 +225,10 @@ The index contains a top-level `version` field and a `skills` array.
 Clients derive the skill path from the `name` field directly:
 
 ```
-/.well-known/skills/{name}/SKILL.md
+/.well-known/agent-skills/{name}/SKILL.md
 ```
 
-For example, `"name": "wrangler"` maps to `/.well-known/skills/wrangler/SKILL.md`.
+For example, `"name": "wrangler"` maps to `/.well-known/agent-skills/wrangler/SKILL.md`.
 
 ### Files Array
 
@@ -250,7 +250,7 @@ Each file entry has these fields:
 - Paths MUST use forward slash (`/`) as the separator
 - Paths MUST NOT begin with `/` or contain `..` segments
 - Paths MUST contain only printable ASCII characters (0x20-0x7E), excluding `\`, `?`, `#`, `[`, `]`, and control characters
-- Each path MUST correspond to an actual file served at `/.well-known/skills/{name}/{path}`
+- Each path MUST correspond to an actual file served at `/.well-known/agent-skills/{name}/{path}`
 
 **Example entries:**
 
@@ -338,7 +338,7 @@ Publishers MAY provide an optional `package` field on a skill entry for archive-
 
 ```json
 "package": {
-  "url": "https://example.com/.well-known/skills/wrangler.tar.gz",
+  "url": "https://example.com/.well-known/agent-skills/wrangler.tar.gz",
   "digest": "sha256:f1e2d3c4..."
 }
 ```
@@ -377,7 +377,7 @@ The `package` field is OPTIONAL. Publishers MAY provide it, and clients MAY pref
 A minimal skill contains just the required `SKILL.md`:
 
 ````
-GET /.well-known/skills/git-workflow/SKILL.md
+GET /.well-known/agent-skills/git-workflow/SKILL.md
 
 ---
 name: git-workflow
@@ -406,7 +406,7 @@ docs: update API reference
 A skill with scripts and reference documentation:
 
 ```
-/.well-known/skills/data-pipeline/
+/.well-known/agent-skills/data-pipeline/
 ├── SKILL.md
 ├── scripts/
 │   ├── validate.py
@@ -454,7 +454,7 @@ For schema requirements, see [references/SCHEMA.md](references/SCHEMA.md).
         { "path": "scripts/validate.py", "digest": "sha256:a591a6d40bf420404a011733cfb7..." }
       ],
       "package": {
-        "url": "https://example.com/.well-known/skills/data-pipeline.tar.gz",
+        "url": "https://example.com/.well-known/agent-skills/data-pipeline.tar.gz",
         "digest": "sha256:9f86d081884c7d659a2feaa0c55ad015..."
       }
     }
@@ -466,7 +466,7 @@ For schema requirements, see [references/SCHEMA.md](references/SCHEMA.md).
 
 Servers MUST:
 
-- Serve `/.well-known/skills/index.json` with `application/json` content type
+- Serve `/.well-known/agent-skills/index.json` with `application/json` content type
 - Serve `SKILL.md` files with `text/markdown` or `text/plain` content type
 - Support `GET` and `HEAD` methods
 - Return `404 Not Found` for skills or files that do not exist
@@ -484,7 +484,7 @@ Clients MUST:
 
 Clients discovering skills from a well-known endpoint MUST:
 
-1. **Fetch `index.json`.** Retrieve `/.well-known/skills/index.json` to enumerate available skills and their files.
+1. **Fetch `index.json`.** Retrieve `/.well-known/agent-skills/index.json` to enumerate available skills and their files.
 
 2. **Check version.** Parse the `version` field. If absent, treat the index as v0.1.0. If the major version is unrecognized, warn the user and abort. Clients MUST ignore unrecognized fields.
 
@@ -497,9 +497,9 @@ Clients discovering skills from a well-known endpoint MUST:
 6. **Apply progressive disclosure.** Load only `name` and `description` at discovery time. Load `SKILL.md` when a skill is activated. Load supporting resources (scripts, references, assets) on demand as the task requires.
 
 7. **Resolve relative paths.** File paths in the `files` array are relative to the skill directory. Resolve against the skill URL:
-   - Skill: `/.well-known/skills/wrangler/`
+   - Skill: `/.well-known/agent-skills/wrangler/`
    - File entry path: `scripts/deploy.sh`
-   - Resolved URL: `/.well-known/skills/wrangler/scripts/deploy.sh`
+   - Resolved URL: `/.well-known/agent-skills/wrangler/scripts/deploy.sh`
 
 8. **Cache aggressively.** Skills change infrequently. Respect `Cache-Control` headers and consider caching content for the duration of a session. Use skill digests to invalidate cached content when updates are detected.
 
@@ -510,7 +510,7 @@ Clients discovering skills from a well-known endpoint MUST:
 The security considerations from [RFC 8615 Section 4](https://datatracker.ietf.org/doc/html/rfc8615#section-4) apply. Additional considerations for skills:
 
 - **Trust**: Skills contain instructions and executable code. Agents should only use skills from trusted origins. See the [Agent Skills security guidance](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview#security-considerations).
-- **Access control**: Servers should control write access to `/.well-known/skills/` carefully, especially in shared hosting environments.
+- **Access control**: Servers should control write access to `/.well-known/agent-skills/` carefully, especially in shared hosting environments.
 - **Script execution**: Clients SHALL NOT execute files under `scripts/` by default. Clients SHALL consider implementing a permissions model that only executes scripts bundled with a skill when explicitly allowed by the user or client configuration. Refer to the [Agent Skills specification](https://agentskills.io/specification) guidance on script execution.
 - **Digest verification**: Clients MUST verify file digests after download. A digest mismatch indicates the content has been tampered with or is stale; clients MUST NOT use unverified content.
 - **Archive safety**: Clients MUST validate archive digests before unpacking. Clients MUST reject archives containing path traversal sequences (`..`, absolute paths). Clients SHOULD verify total unpacked size against reasonable limits to prevent denial-of-service via decompression bombs.

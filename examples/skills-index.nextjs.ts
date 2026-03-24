@@ -12,7 +12,7 @@
  * Requires: gray-matter (npm install gray-matter)
  */
 import { createHash } from "crypto";
-import { readdir, readFile, stat } from "fs/promises";
+import { readdir, readFile } from "fs/promises";
 import { join, relative } from "path";
 import matter from "gray-matter";
 
